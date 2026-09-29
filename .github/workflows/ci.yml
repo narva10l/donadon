@@ -1,0 +1,223 @@
+# ============================================================
+#  Donando - integracion continua.
+#
+#  Cada vez que algo llega a main, este archivo corre las
+#  pruebas de Python y de JavaScript, y publica la imagen del
+#  proyecto en GitHub Container Registry.
+#
+#  Que NO hace: desplegar. No hay ningun servidor de destino
+#  configurado, y a proposito. Un despliegue automatico necesita
+#  un sitio al que llegar (un VPS por SSH, o un runner propio
+#  instalado en tu maquina), y mientras no exista uno este
+#  archivo se limita a comprobar que el codigo esta sano y a
+#  dejar la imagen lista.
+#
+#  Como verlo: en GitHub, pestana Actions. El nombre del
+#  workflow aparece arriba a la izquierda.
+#
+#  Como tensions que se vea: sube esto con un push a main. No
+#  hace falta configurar nada antes: no hay secrets que crear
+#  ni runners que instalar.
+# ============================================================
+
+name: CI
+
+# Permiso minimo para todo el pipeline. El job "Publicar imagen"
+# necesita ademas packages: write, y lo pide ahi mismo.
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  # Relanzar el pipeline a mano desde la pestana Actions. Util
+  # si GitHub estaba caido y te saltaste algun push, o si tocas
+  # algo que no es codigo.
+  workflow_dispatch:
+
+# Si llegan dos pushes seguidos, el primero se cancela en vez de
+# gastar sus minutos de runner en un resultado que ya no le
+# interesa a nadie.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ==============================================================
+  #  Pruebas de Python (pytest)
+  # ==============================================================
+  pruebas:
+    name: Pruebas Python
+    runs-on: ubuntu-latest
+
+    # ------------------------------------------------------------
+    #  MySQL de verdad, no SQLite.
+    #
+    #  Las pruebas no pueden corren contra una base falsa:
+    #  tests/conftest.py crea "dona_donador_test" y le da
+    #  permisos, y MySQL 8 autentica con caching_sha2_password,
+    #  que es justo lo que se quiere poner a prueba. Por eso el
+    #  job corre en el runner de Linux: los "services" de GitHub
+    #  solo existen ahi, en un runner de Windows habria que
+    #  instalar MySQL a mano.
+    # ------------------------------------------------------------
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          # Estas credenciales NO son un secreto y por eso no
+          # estan en GitHub Secrets. MySQL existe por un unico
+          # uso: mientras dure este job. En cuanto termina, el
+          # contenedor se borra con sus datos dentro. Son valores
+          # de adorno, unicamente para que la base arranque.
+          MYSQL_ROOT_PASSWORD: clave-falsa-solo-para-el-ci
+          MYSQL_DATABASE: dona_donador
+          MYSQL_USER: dona_user
+          MYSQL_PASSWORD: clave-falsa-solo-para-el-ci
+        ports:
+          - 3306:3306
+        # GitHub espera a que el servicio diga "healthy" antes de
+        # arrancar los pasos. Sin esto, pytest corre antes de que
+        # MySQL acepte conexiones y falla con un error que parece
+        # de la app pero en realidad es de arranque.
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pclave-falsa-solo-para-el-ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      # 127.0.0.1 y NO localhost, por el mismo motivo que en
+      # docker-compose.yml: en algunos clientes localhost se
+      # resuelve por socket y MySQL todavia no escucha ahi.
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+      DB_NAME: dona_donador
+      DB_USER: dona_user
+      DB_PASSWORD: clave-falsa-solo-para-el-ci
+      # conftest.py se conecta con esto como root: por eso el
+      # usuario dona_user no le alcanza para crear la base.
+      MYSQL_ROOT_PASSWORD: clave-falsa-solo-para-el-ci
+      # La app firma los JSON Web Token con esta clave. Tampoco
+      # es un secreto: solo existe mientras dure el job.
+      SECRET_KEY: clave-falsa-solo-para-el-ci
+      ACCESS_TOKEN_EXPIRE_HOURS: "24"
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          # La misma version que el Dockerfile (python:3.13-slim).
+          # Si el Dockerfile cambia, esto hay que cambiarlo.
+          python-version: "3.13"
+          # Cachea la descarga de pip entre corridas: la
+          # instalacion baja de unos 40s a unos 10s.
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Correr las pruebas
+        run: pytest -v
+
+  # ==============================================================
+  #  Pruebas de JavaScript (Jest)
+  #
+  #  Corren dentro de Docker con los mismos comandos que
+  #  probar-js.bat, para que den exactamente el mismo resultado
+  #  que cuando las lanzas tu desde Windows.
+  # ==============================================================
+  pruebas-js:
+    name: Pruebas JavaScript
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      # El .env real no puede estar en el repo (esta en
+      # .gitignore) y aqui no hace falta: estas pruebas no tocan
+      # ni la app ni la base. Pero docker compose lee el archivo
+      # compose.yml ENTERO y avisa de cada variable que no
+      # encuentra, aunque el servicio que vamos a usar no las
+      # mencione. Estos valores solo silencian esos avisos.
+      - name: Crear un .env de mentira para que compose no se queje
+        run: |
+          printf 'DB_NAME=dona_donador\nDB_USER=dona_user\nDB_PASSWORD=x\nMYSQL_ROOT_PASSWORD=x\nSECRET_KEY=x\nACCESS_TOKEN_EXPIRE_HOURS=24\n' > .env
+
+      - name: Construir la imagen de pruebas
+        run: docker compose --profile pruebas build tests-js
+
+      - name: Correr Jest
+        # El ENTRYPOINT de Dockerfile.jest es jest, asi que lo
+        # que sobra se le pasa a el. Sin argumentos, corre todo.
+        run: docker compose --profile pruebas run --rm tests-js
+
+  # ==============================================================
+  #  Publicar la imagen en GitHub Container Registry
+  #
+  #  Se publica solo si las dos pruebas pasaron: si hay un error,
+  #  GHCR se queda con la ultima version que si compilo bien.
+  #
+  #  GHCR es donde se guardan las imagenes de un repositorio de
+  #  GitHub, gratis y sin dar de alta nada. Aunque hoy no haya
+  #  despliegue, tener la imagen ahi deja el camino abierto: el
+  #  dia que haya un servidor, solo es un "docker pull".
+  # ==============================================================
+  imagen:
+    name: Publicar imagen
+    runs-on: ubuntu-latest
+    needs: [pruebas, pruebas-js]
+
+    permissions:
+      contents: read
+      # Sin esto el GITHUB_TOKEN no puede escribir en GHCR y el
+      # job falla al hacer login.
+      packages: write
+
+    steps:
+      - name: Descargar el codigo
+        uses: actions/checkout@v4
+
+      # El GITHUB_TOKEN lo genera GitHub solo para cada corrida y
+      # caduca al terminar, asi que no hay ningun secret que
+      # crear ni que renovar nunca.
+      - name: Entrar a GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y subir la imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # Tres etiquetas para tres propositos:
+          #   main     -> "lo ultimo que mergearon a main"
+          #   sha-...  -> esa builds es exactamente este commit
+          #   latest   -> la convencion de siempre
+          # OJO: el nombre del registro NO admite mayusculas.
+          # "narva10l/donadon" ya lo cumple. Si algun dia el
+          # repositorio se renombra a "Donadon", habria que
+          # pasarlo a minusculas a mano.
+          tags: |
+            ghcr.io/${{ github.repository }}:main
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+          # Reutiliza las capas de la corrida anterior en vez de
+          # empezar de cero. Sin esto, cada push repite
+          # "pip install" desde cero y los minutos de runner se
+          # disparan.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
