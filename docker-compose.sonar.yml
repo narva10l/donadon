@@ -1,0 +1,106 @@
+# ============================================================
+#  Donando - SonarQube para medir la calidad del codigo.
+#
+#  Que es: un servidor SonarQube con su interfaz web, y el
+#  scanner que analiza el codigo. El servidor guarda los datos;
+#  el scanner solo lee el codigo y le manda los resultados.
+#
+#  Que NO es: un linter mas. SonarQube revisa duplicados,
+#  complejidad, errores, "code smells" y vulnerabilidades, y
+#  guarda el historial para ver si la deuda tecnica sube o baja
+#  con cada cambio.
+#
+#  Se levanta con:
+#      docker compose -p donadon-sonar -f docker-compose.sonar.yml up -d
+#
+#  Y el analisis se lanza con:
+#      probar-sonar
+#
+#  OJO: este archivo NO publica la base de datos. La imagen
+#  oficial usa una base embebida dentro del propio contenedor,
+#  asi que no hay que instalar PostgreSQL ni abrir el puerto
+#  5432. Todo vive en los volumenes de abajo.
+# ============================================================
+
+services:
+
+  # ------------------------------------------------------------
+  #  El servidor: la pagina web donde se ve el reporte.
+  #
+  #  OJO con los puertos, que es la trampa de este servicio:
+  #  por dentro, el 9000 lo usa la pagina web de SonarQube y el
+  #  9001 lo usa el Elasticsearch que trae embebido (que
+  #  contesta "X-elastic-product: Elasticsearch" si le pegas).
+  #  Por eso el mapeo va 9001:9000 y no 9001:9001.
+  #
+  #  El 9001 del host esta ocupado por la instancia de Synapse,
+  #  asi que esta se ve en http://localhost:9001 pero por detras
+  #  habla con el 9000 de su contenedor.
+  # ------------------------------------------------------------
+  sonarqube:
+    image: sonarqube:community
+    restart: unless-stopped
+    ports:
+      - "9001:9000"
+    volumes:
+      # Los datos (proyectos, analisis, usuarios) viven aqui.
+      # Sobreviven a "down", y se borran con "down -v".
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      # Los plugins que se le agreguen a mano.
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    healthcheck:
+      # La imagen es Ubuntu y trae curl, no wget (a diferencia de
+      # las imagenes alpine de otros proyectos, que si lo traen).
+      # Y el 9000, porque ese es el puerto de la web por dentro.
+      test:
+        [
+          "CMD-SHELL",
+          'curl -sf http://127.0.0.1:9000/api/system/status | grep -q ''"status":"UP"''',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # ------------------------------------------------------------
+  #  SonarScanner CLI. No arranca con "up -d": vive bajo el
+  #  profile "scan" y solo lo lanza probar-sonar.bat con
+  #  "docker compose run".
+  #
+  #  La imagen trae su propio Java, asi que el Java del host es
+  #  irrelevante. Desde la version 12 corre como usuario 1000,
+  #  no como root.
+  # ------------------------------------------------------------
+  scanner:
+    image: sonarsource/sonar-scanner-cli:12.2
+    profiles:
+      - scan
+    environment:
+      # Ojo: esta es la direccion DENTRO de la red de Docker, y
+      # por eso es el 9000 y no el 9001 que se ve desde el
+      # navegador. El 9001 de adentro es el Elasticsearch.
+      SONAR_HOST_URL: http://sonarqube:9000
+      # El token viaja como variable de entorno, y el scanner la
+      # recoge sola. Se declara aqui y no en el "command" para
+      # poder levantar el servidor (con "up -d sonarqube") sin
+      # tener el token todavia, que es justo lo que se necesita
+      # para ir a la pagina y generarlo.
+      #
+      # Los dos puntos con guion (":-") van a proposito: si el
+      # token no esta, queda vacio y el scanner lo avisa, en vez
+      # de impedir que Docker arranque.
+      SONAR_TOKEN: ${SONAR_TOKEN:-}
+    volumes:
+      # El codigo se lee del host y .scannerwork se escribe ahi.
+      - ./:/usr/src
+    command:
+      - -Dproject.settings=sonar-project.properties
+    depends_on:
+      sonarqube:
+        condition: service_healthy
+
+volumes:
+  sonarqube_data:
+  sonarqube_logs:
+  sonarqube_extensions:

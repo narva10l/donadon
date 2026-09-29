@@ -16,6 +16,10 @@ reporte.html
 # Reportes de seguridad: se generan corriendo probar-seguridad
 seguridad/
 
+# Carpeta de trabajo de SonarQube: la crea el scanner al analizar
+# y no es codigo del proyecto.
+.scannerwork/
+
 # JavaScript (Jest). El node_modules vive en un volumen de Docker,
 # pero por si se llega a instalar en la maquina, tampoco se sube.
 node_modules/
