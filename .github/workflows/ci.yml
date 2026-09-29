@@ -2,15 +2,13 @@
 #  Donando - integracion continua.
 #
 #  Cada vez que algo llega a main, este archivo corre las
-#  pruebas de Python y de JavaScript, y publica la imagen del
-#  proyecto en GitHub Container Registry.
+#  pruebas de Python y las de JavaScript, cada una en su job.
 #
-#  Que NO hace: desplegar. No hay ningun servidor de destino
-#  configurado, y a proposito. Un despliegue automatico necesita
-#  un sitio al que llegar (un VPS por SSH, o un runner propio
-#  instalado en tu maquina), y mientras no exista uno este
-#  archivo se limita a comprobar que el codigo esta sano y a
-#  dejar la imagen lista.
+#  Que NO hace: desplegar ni publicar la imagen. No hay ningun
+#  servidor de destino configurado, y a proposito. Un despliegue
+#  automatico necesita un sitio al que llegar (un VPS por SSH, o un
+#  runner propio instalado en tu maquina), y mientras no exista uno
+#  este archivo se limita a comprobar que el codigo esta sano.
 #
 #  Como verlo: en GitHub, pestana Actions. El nombre del
 #  workflow aparece arriba a la izquierda.
@@ -22,8 +20,9 @@
 
 name: CI
 
-# Permiso minimo para todo el pipeline. El job "Publicar imagen"
-# necesita ademas packages: write, y lo pide ahi mismo.
+# Unico permiso del pipeline: leer el codigo, que es lo que
+# necesita el paso de "Descargar el codigo". Es el minimo: por
+# mucho que se suba aqui, no queda nada expuesto.
 permissions:
   contents: read
 
@@ -163,61 +162,17 @@ jobs:
         run: docker compose --profile pruebas run --rm tests-js
 
   # ==============================================================
-  #  Publicar la imagen en GitHub Container Registry
+  #  Aca terminaba el job que publicaba la imagen en GitHub
+  #  Container Registry. Se quito porque fallaba: buildx no lograba
+  #  autenticarse contra el servicio de cache de GitHub y abortaba
+  #  al segundo ("buildx failed with"). El login al registro si
+  #  funcionaba, asi que no eran los permisos.
   #
-  #  Se publica solo si las dos pruebas pasaron: si hay un error,
-  #  GHCR se queda con la ultima version que si compilo bien.
-  #
-  #  GHCR es donde se guardan las imagenes de un repositorio de
-  #  GitHub, gratis y sin dar de alta nada. Aunque hoy no haya
-  #  despliegue, tener la imagen ahi deja el camino abierto: el
-  #  dia que haya un servidor, solo es un "docker pull".
+  #  Cuando haya un servidor al que desplegar, el camino de vuelta
+  #  es este: se agrega un job que use docker/build-push-action
+  #  para subir la imagen, y hay que acordarse de una cosa: las
+  #  lineas "cache-from: type=gha" y "cache-to: type=gha,mode=max"
+  #  son las que tumbaban el job. Se pueden quitar sin problema
+  #  (solo se pierde el reaprovechamiento de capas) o arreglar
+  #  dando permiso de escritura sobre la cache de Actions.
   # ==============================================================
-  imagen:
-    name: Publicar imagen
-    runs-on: ubuntu-latest
-    needs: [pruebas, pruebas-js]
-
-    permissions:
-      contents: read
-      # Sin esto el GITHUB_TOKEN no puede escribir en GHCR y el
-      # job falla al hacer login.
-      packages: write
-
-    steps:
-      - name: Descargar el codigo
-        uses: actions/checkout@v4
-
-      # El GITHUB_TOKEN lo genera GitHub solo para cada corrida y
-      # caduca al terminar, asi que no hay ningun secret que
-      # crear ni que renovar nunca.
-      - name: Entrar a GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Construir y subir la imagen
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          # Tres etiquetas para tres propositos:
-          #   main     -> "lo ultimo que mergearon a main"
-          #   sha-...  -> esa builds es exactamente este commit
-          #   latest   -> la convencion de siempre
-          # OJO: el nombre del registro NO admite mayusculas.
-          # "narva10l/donadon" ya lo cumple. Si algun dia el
-          # repositorio se renombra a "Donadon", habria que
-          # pasarlo a minusculas a mano.
-          tags: |
-            ghcr.io/${{ github.repository }}:main
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}:latest
-          # Reutiliza las capas de la corrida anterior en vez de
-          # empezar de cero. Sin esto, cada push repite
-          # "pip install" desde cero y los minutos de runner se
-          # disparan.
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
