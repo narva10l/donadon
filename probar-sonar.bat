@@ -30,7 +30,9 @@ REM         error.
 REM      3. Arriba a la derecha: tu avatar > My Account >
 REM         Security > Generate Token. Ponle un nombre (por
 REM         ejemplo "donandon") y copia el texto que empieza con
-REM         squp_.
+REM         squ_ (asi, con una sola "q" y sin "p"). Ojo: en la
+REM         version 26 el prefijo es "squ_", no el "squp_" de las
+REM         versiones viejas.
 REM      4. En la terminal de PowerShell, guardalo:
 REM            [Environment]::SetEnvironmentVariable("SONAR_TOKEN","squp_...","User")
 REM         Ojo: el token REAL no se pega aqui en el chat ni se
@@ -130,7 +132,7 @@ echo   3. Avatar ^> My Account ^> Security ^> Generate Token
 echo   4. Copia el token (empieza con squp_)
 echo   5. En PowerShell ejecuta:
 echo.
-echo      [Environment]::SetEnvironmentVariable("SONAR_TOKEN","squp_TU_TOKEN","User")
+echo      [Environment]::SetEnvironmentVariable("SONAR_TOKEN","squ_TU_TOKEN","User")
 echo.
 echo Cierra esta terminal y abre una nueva, para que Windows lea
 echo el token recien guardado.
