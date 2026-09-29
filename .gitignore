@@ -13,6 +13,9 @@ reporte.txt
 reporte.xml
 reporte.html
 
+# Reportes de seguridad: se generan corriendo probar-seguridad
+seguridad/
+
 # JavaScript (Jest). El node_modules vive en un volumen de Docker,
 # pero por si se llega a instalar en la maquina, tampoco se sube.
 node_modules/

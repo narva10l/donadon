@@ -12,9 +12,18 @@ __pycache__/
 .gitignore
 README.md
 
-# Script de Windows para correr las pruebas: solo sirve en el host.
+# Script de Windows para correr las pruebas: solo sirven en el host.
 probar.bat
 probar-js.bat
+probar-seguridad.bat
+
+# --- Revision de seguridad ------------------------------------
+# Los reportes se generan en seguridad/ y no son codigo.
+# La pila desechable de OWASP ZAP tiene su propia imagen
+# (Dockerfile.seguridad), asi que esto no lo necesita.
+seguridad/
+docker-compose.seguridad.yml
+Dockerfile.seguridad
 
 # --- Pruebas de JavaScript -------------------------------------
 # La app no usa Node. Esto solo corre en la imagen de pruebas

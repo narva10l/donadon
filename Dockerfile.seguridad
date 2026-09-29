@@ -1,0 +1,25 @@
+# ============================================================
+#  Imagen SOLO para revisar la seguridad del codigo:
+#    pip-audit  -> vulnerabilidades conocidas en las librerias
+#    bandit     -> errores de seguridad al escribir el codigo
+#
+#  No se usa para servir la app: esa es la otra imagen
+#  (Dockerfile).
+#
+#  El codigo NO se copia: docker-compose.seguridad.yml lo
+#  monta desde Windows en solo lectura.
+# ============================================================
+FROM python:3.13-slim
+
+WORKDIR /w
+
+# Se instalan al construir la imagen, no al correr, para que
+# el escaneo arranque de inmediato.
+# tabulate lo necesita pip-audit para poder dibujar la tabla
+# de resultados con el formato "columns".
+RUN pip install --no-cache-dir pip-audit bandit tabulate
+
+# docker compose run REEMPLAZA el comando, asi que para que
+# "run analisis pip-audit ..." llegue al shell y no se pierda,
+# el entrypoint es bash -c.
+ENTRYPOINT ["/bin/bash", "-c"]

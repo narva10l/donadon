@@ -1,0 +1,132 @@
+# ============================================================
+#  Pila DESPONIBLE para revisar la seguridad (OWASP).
+#
+#  ESTA NO ES TU APP. Es una copia que se puede tirar, para que
+#  un escaneo con cargas de ataque (ZAP) no toque tus datos de
+#  verdad, que viven en el volumen "datos_mysql" de
+#  docker-compose.yml.
+#
+#  Diferencias con docker-compose.yml, todas a proposito:
+#    - proyecto de Docker aparte:  donando-seguridad
+#    - base de datos NUEVA:        dona_seguridad_efimera
+#    - usuario de MySQL NUEVO:     seg_user
+#    - volumen NUEVO:              datos_seguridad
+#    - puerto NUEVO:               8081
+#    - NO lee el archivo .env:     asi las contrasenas reales
+#                                  nunca tocan esta pila
+#    - SECRET_KEY propia:          un token falsificado con la
+#                                  clave real no sirve aqui
+#
+#  Esta pila casi nunca se levanta a mano. Todo se hace desde:
+#      probar-seguridad
+#
+#  Levantar a mano:
+#      docker compose -p donando-seguridad -f docker-compose.seguridad.yml up -d
+#  Tirar (esto borra SOLO sus datos, no los tuyos):
+#      docker compose -p donando-seguridad -f docker-compose.seguridad.yml down -v
+# ============================================================
+
+services:
+
+  # ------------------------------------------------------------
+  #  Base de datos de mentira. MySQL NUEVO, usuario NUEVO.
+  #  Although aqui se repiten el usuario y la clave de MySQL,
+  #  no se tocan: son los del .env, y esta base es una
+  #  instancia distinta con permisos solo sobre
+  #  dona_seguridad_efimera.
+  # ------------------------------------------------------------
+  db:
+    image: mysql:8.4
+    restart: "no"
+    environment:
+      MYSQL_DATABASE: dona_seguridad_efimera
+      MYSQL_USER: seg_user
+      MYSQL_PASSWORD: clave_descartable_seg
+      MYSQL_ROOT_PASSWORD: raiz_descartable_seg
+    volumes:
+      - datos_seguridad:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - 127.0.0.1
+        - -uroot
+        - -praiz_descartable_seg
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 40s
+
+  # ------------------------------------------------------------
+  #  Copia de la app, apuntando a la base de mentira.
+  #  Se construye desde el mismo Dockerfile, pero al ser otro
+  #  proyecto de Docker es otra imagen: no se pisa con la tuya.
+  # ------------------------------------------------------------
+  app:
+    build: .
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: dona_seguridad_efimera
+      DB_USER: seg_user
+      DB_PASSWORD: clave_descartable_seg
+      # Clave propia de esta pila. La de tu .env no se usa aqui.
+      SECRET_KEY: clave-falsa-solo-para-el-escaneo-de-seguridad-no-la-uses-en-nada-real
+      ACCESS_TOKEN_EXPIRE_HOURS: 24
+    ports:
+      - "127.0.0.1:8081:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/')
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 25s
+
+  # ------------------------------------------------------------
+  #  pip-audit y bandit. Leen el codigo y escriben el reporte
+  #  en ./seguridad. No levantan base de datos ni tocan nada.
+  # ------------------------------------------------------------
+  analisis:
+    build:
+      context: .
+      dockerfile: Dockerfile.seguridad
+    profiles: ["analisis"]
+    # El codigo se lee de /w en solo lectura; el reporte se
+    # escribe en /seguridad, que si acepta escritura.
+    volumes:
+      - .:/w:ro
+      - ./seguridad:/seguridad
+    entrypoint: ["/bin/bash", "-c"]
+
+  # ------------------------------------------------------------
+  #  OWASP ZAP. Escanea la app de arriba. Solo corre cuando
+  #  se llama con "docker compose run", nunca con "up".
+  #
+  #  El entrypoint es bash -c para poder pasarle el script
+  #  completo como un solo argumento (docker compose run
+  #  REEMPLAZA el comando, no lo anade).
+  # ------------------------------------------------------------
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    profiles: ["escaneo"]
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
+      - ./seguridad:/zap/wrk
+    entrypoint: ["/bin/bash", "-c"]
+
+volumes:
+  # Los datos del escaneo. Se borran con "down -v" y NO tienen
+  # nada que ver con "datos_mysql", que es donde estan tus datos.
+  datos_seguridad:
