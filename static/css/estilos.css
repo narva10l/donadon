@@ -1,0 +1,485 @@
+/* ==========================================================
+   Donando - estilos
+   ========================================================== */
+
+:root {
+  --primario: #5b3fd6;
+  --primario-oscuro: #452eb0;
+  --texto: #1e1b2e;
+  --gris: #6b6880;
+  --borde: #e3e0ef;
+  --fondo: #f5f4fa;
+  --blanco: #ffffff;
+  --error-fondo: #fdecec;
+  --error-texto: #b3261e;
+  --exito-fondo: #e8f6ed;
+  --exito-texto: #1b6b3a;
+  --radio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  color: var(--texto);
+  background: var(--fondo);
+  line-height: 1.5;
+}
+
+.oculto { display: none !important; }
+
+/* ---------- Pagina centrada (login / registro) ---------- */
+.pagina-centrada {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.caja {
+  width: 100%;
+  max-width: 460px;
+  background: var(--blanco);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 8px 30px rgba(30, 27, 46, 0.08);
+}
+
+.marca {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primario);
+  letter-spacing: -0.5px;
+}
+
+.subtitulo {
+  margin: 4px 0 24px;
+  color: var(--gris);
+  font-size: 0.95rem;
+}
+
+/* ---------- Pestanas ---------- */
+.pestanas {
+  display: flex;
+  gap: 6px;
+  background: var(--fondo);
+  padding: 5px;
+  border-radius: var(--radio);
+  margin-bottom: 22px;
+}
+
+.pestana {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gris);
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pestana:hover { color: var(--texto); }
+
+.pestana.activa {
+  background: var(--blanco);
+  color: var(--primario);
+  box-shadow: 0 1px 3px rgba(30, 27, 46, 0.12);
+}
+
+/* ---------- Campos ---------- */
+.campo {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.campo > span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--texto);
+  background: var(--blanco);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+  outline: none;
+  border-color: var(--primario);
+  box-shadow: 0 0 0 3px rgba(91, 63, 214, 0.12);
+}
+
+.campo textarea { resize: vertical; }
+
+.campo input.invalido {
+  border-color: var(--error-texto);
+  background: var(--error-fondo);
+}
+
+.campo.oculto { display: none; }
+
+/* ---------- Selector de rol ---------- */
+.grupo-roles {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 14px 16px 16px;
+  margin: 0 0 20px;
+}
+
+.grupo-roles legend {
+  padding: 0 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.opcion:hover { background: var(--fondo); }
+
+.opcion:has(input:checked) {
+  border-color: var(--primario);
+  background: rgba(91, 63, 214, 0.06);
+}
+
+.opcion input { accent-color: var(--primario); margin: 0; }
+
+.opcion-texto { display: flex; flex-direction: column; line-height: 1.3; }
+.opcion-texto strong { font-size: 0.94rem; }
+.opcion-texto small { color: var(--gris); font-size: 0.8rem; }
+
+/* ---------- Secciones dentro del formulario ---------- */
+.etiqueta-seccion {
+  margin: 24px 0 2px;
+  padding-top: 18px;
+  border-top: 1px solid var(--borde);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.nota {
+  margin: 0 0 14px;
+  font-size: 0.82rem;
+  color: var(--gris);
+}
+
+/* ---------- Botones ---------- */
+.boton {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radio);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.boton:active { transform: translateY(1px); }
+
+.boton-primario { background: var(--primario); color: var(--blanco); }
+.boton-primario:hover { background: var(--primario-oscuro); }
+
+.boton:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.boton-chico { width: auto; padding: 8px 16px; font-size: 0.87rem; }
+
+.boton-claro {
+  background: var(--blanco);
+  color: var(--primario);
+  border: 1px solid var(--borde);
+}
+
+.boton-claro:hover { background: var(--fondo); }
+
+/* ---------- Mensajes ---------- */
+.mensaje {
+  padding: 11px 14px;
+  border-radius: var(--radio);
+  margin-bottom: 18px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.mensaje.error { background: var(--error-fondo); color: var(--error-texto); }
+.mensaje.exito { background: var(--exito-fondo); color: var(--exito-texto); }
+
+/* ---------- Barra superior ---------- */
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 28px;
+  background: var(--blanco);
+  border-bottom: 1px solid var(--borde);
+}
+
+.barra .marca { font-size: 1.4rem; }
+
+.barra-derecha {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.etiqueta-rol {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(91, 63, 214, 0.1);
+  color: var(--primario);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ---------- Contenido ---------- */
+.contenido {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.titulo-seccion {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: -0.3px;
+}
+
+.subtitulo-seccion {
+  margin: 4px 0 26px;
+  color: var(--gris);
+  font-size: 0.92rem;
+}
+
+.cargando {
+  color: var(--gris);
+  font-size: 0.92rem;
+  padding: 20px 0;
+}
+
+.vacio {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--gris);
+  background: var(--blanco);
+  border: 1px dashed var(--borde);
+  border-radius: 16px;
+}
+
+.vacio strong { display: block; margin-bottom: 6px; color: var(--texto); font-size: 1.05rem; }
+
+/* ---------- Rejilla de caridades ---------- */
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: var(--blanco);
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+
+.tarjeta:hover {
+  transform: translateY(-3px);
+  border-color: var(--primario);
+  box-shadow: 0 10px 24px rgba(30, 27, 46, 0.1);
+}
+
+.tarjeta-titulo {
+  margin: 0 0 4px;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--primario);
+  overflow-wrap: anywhere;
+}
+
+.tarjeta-subtitulo {
+  margin: 0 0 14px;
+  color: var(--gris);
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tarjeta-pie {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--borde);
+  font-size: 0.8rem;
+  color: var(--gris);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- Modal ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-fondo {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 27, 46, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.modal-caja {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 28px;
+  background: var(--blanco);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(30, 27, 46, 0.3);
+  animation: aparecer 0.18s ease-out;
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-cerrar {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: var(--fondo);
+  color: var(--gris);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-cerrar:hover { background: var(--borde); color: var(--texto); }
+
+.modal-titulo {
+  margin: 0 40px 2px 0;
+  font-size: 1.4rem;
+  color: var(--primario);
+  overflow-wrap: anywhere;
+}
+
+.modal-subtitulo {
+  margin: 0 0 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--borde);
+  color: var(--gris);
+  font-size: 0.9rem;
+}
+
+.modal-cuerpo { margin-bottom: 22px; }
+
+.dato {
+  display: flex;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--fondo);
+  font-size: 0.9rem;
+}
+
+.dato:last-child { border-bottom: none; }
+
+.dato-etiqueta {
+  flex: 0 0 140px;
+  color: var(--gris);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.dato-valor { flex: 1; overflow-wrap: anywhere; white-space: pre-wrap; }
+.dato-negrita { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.modal-cuenta {
+  padding: 18px;
+  background: var(--fondo);
+  border-radius: 12px;
+}
+
+.modal-cuenta h4 {
+  margin: 0 0 4px;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--gris);
+}
+
+.modal-cuenta .dato { border-bottom-color: #e8e5f2; }
+
+/* ---------- Pantallas chicas ---------- */
+@media (max-width: 560px) {
+  .barra { padding: 12px 16px; }
+  .barra-derecha { width: 100%; justify-content: space-between; }
+  .contenido { padding: 24px 16px 48px; }
+  .dato { flex-direction: column; gap: 2px; }
+  .dato-etiqueta { flex: none; }
+}

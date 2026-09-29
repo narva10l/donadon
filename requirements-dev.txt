@@ -1,0 +1,7 @@
+# Dependencias solo para las pruebas.
+# Se instalan aparte de las de la app para no mezclarlas.
+
+# FastAPI/Starlette necesitan esto para poder usar TestClient.
+httpx2
+
+pytest

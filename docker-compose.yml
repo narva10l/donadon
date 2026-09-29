@@ -1,0 +1,96 @@
+# ============================================================
+#  Donando - dos servicios: la base de datos y la aplicacion.
+#  Se levanta con:   docker compose up --build
+# ============================================================
+
+services:
+
+  # ------------------------------------------------------------
+  #  La base de datos. No se publica ningun puerto, asi que
+  #  desde Windows no se puede entrar directamente a MySQL.
+  # ------------------------------------------------------------
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - datos_mysql:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        # OJO: 127.0.0.1 y NO localhost. Al arrancar, MySQL levanta un
+        # servidor temporal que solo escucha por socket; "localhost" se
+        # conecta por ahi y daria "healthy" antes de que el puerto 3306
+        # este listo. Con 127.0.0.1 el ping obliga a usar TCP.
+        - -h
+        - 127.0.0.1
+        - -uroot
+        - -p${MYSQL_ROOT_PASSWORD}
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      # MySQL tarda en arrancar la primera vez; durante estos
+      # 40 segundos un fallo NO cuenta como unhealthy.
+      start_period: 40s
+
+  # ------------------------------------------------------------
+  #  La aplicacion.
+  # ------------------------------------------------------------
+  app:
+    build: .
+    restart: unless-stopped
+    # No arranca hasta que la base responde al healthcheck.
+    # Sin esto, el primer arranque falla al crear las tablas
+    # porque MySQL todavia no esta listo.
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      # "db" es el nombre del servicio dentro de la red de Docker.
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_HOURS: ${ACCESS_TOKEN_EXPIRE_HOURS}
+    ports:
+      - "8000:8000"
+
+  # ------------------------------------------------------------
+  #  Las pruebas de JavaScript (Jest).
+  #
+  #  No es un servicio que quede prendido: se usa de a ratos con
+  #      docker compose --profile pruebas run --rm tests-js
+  #
+  #  - static/, templates/ y tests-js/ van montados en solo lectura,
+  #    para que las pruebas lean el codigo REAL y puedas editar un
+  #    archivo sin reconstruir. Son unos cuantos archivos, no pesa.
+  #  - node_modules NO se monta: ya va dentro de la imagen, y asi
+  #    queda fuera de la carpeta de OneDrive, donde seria lentisimo.
+  #  - El comando lo pone el ENTRYPOINT de Dockerfile.jest, por eso
+  #    aqui no hay `command`. Asi "run tests-js -t modal" le pasa el
+  #    -t a Jest en vez de reemplazarlo.
+  # ------------------------------------------------------------
+  tests-js:
+    build:
+      context: .
+      dockerfile: Dockerfile.jest
+    profiles: ["pruebas"]
+    volumes:
+      - ./static:/app/static:ro
+      - ./templates:/app/templates:ro
+      - ./tests-js:/app/tests-js:ro
+      - ./jest.config.js:/app/jest.config.js:ro
+
+volumes:
+  # Los datos quedan aqui. Sobrevive a "docker compose down".
+  datos_mysql:

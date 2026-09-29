@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donando - Entrar</title>
+  <link rel="stylesheet" href="/static/css/estilos.css">
+</head>
+<body class="pagina-centrada">
+
+  <div class="caja">
+    <h1 class="marca">Donando</h1>
+    <p class="subtitulo">Registrate como donante o como caridad</p>
+
+    <!-- ============ PESTANAS ============ -->
+    <div class="pestanas">
+      <button type="button" class="pestana activa" data-panel="registro">Crear cuenta</button>
+      <button type="button" class="pestana" data-panel="login">Iniciar sesion</button>
+    </div>
+
+    <div id="mensaje" class="mensaje oculto"></div>
+
+    <!-- ============ REGISTRO ============ -->
+    <form id="form-registro" class="panel">
+      <fieldset class="grupo-roles">
+        <legend>¿Como quieres registrarte?</legend>
+
+        <label class="opcion">
+          <input type="radio" name="rol" value="donante" checked>
+          <span class="opcion-texto">
+            <strong>Donante</strong>
+            <small>Quiero ayudar a una causa</small>
+          </span>
+        </label>
+
+        <label class="opcion">
+          <input type="radio" name="rol" value="caridad">
+          <span class="opcion-texto">
+            <strong>Caridad</strong>
+            <small>Quiero recibir donaciones</small>
+          </span>
+        </label>
+      </fieldset>
+
+      <!-- comunes -->
+      <label class="campo">
+        <span>Nombre</span>
+        <input type="text" name="nombre" placeholder="Tu nombre" required>
+      </label>
+
+      <div id="bloque-apellido" class="bloque">
+        <label class="campo">
+          <span>Apellido</span>
+          <input type="text" name="apellido" placeholder="Tu apellido">
+        </label>
+      </div>
+
+      <label class="campo">
+        <span>Correo</span>
+        <input type="email" name="correo" placeholder="tucorreo@ejemplo.com" required>
+      </label>
+
+      <label class="campo">
+        <span>Contrasena</span>
+        <input type="password" name="password" placeholder="Minimo 6 caracteres" required>
+      </label>
+
+      <!-- solo caridad -->
+      <div id="bloque-caridad" class="bloque oculto">
+        <label class="campo">
+          <span>Causa</span>
+          <input type="text" name="causa" placeholder="A que se dedica tu caridad">
+        </label>
+
+        <label class="campo">
+          <span>Ubicacion</span>
+          <select name="ubicacion" required>
+            <option value="">Selecciona una ciudad</option>
+            <option value="Torreon, Coahuila">Torreon, Coahuila</option>
+            <option value="Gomez, Durango">Gomez, Durango</option>
+            <option value="Lerdo, Durango">Lerdo, Durango</option>
+          </select>
+        </label>
+
+        <label class="campo">
+          <span>Informacion extra</span>
+          <textarea name="info_extra" rows="3" placeholder="Cuanta gente ayudas, como y cuando, redes sociales..."></textarea>
+        </label>
+
+        <p class="etiqueta-seccion">Datos de cuenta</p>
+        <p class="nota">Las donaciones se hacen por fuera de la pagina. Estos datos solo se muestran como informacion.</p>
+
+        <label class="campo">
+          <span>Numero de cuenta</span>
+          <input type="text" name="cuenta_numero" placeholder="Ej: 123-456-7890">
+        </label>
+
+        <label class="campo">
+          <span>Nombre del titular</span>
+          <input type="text" name="cuenta_titular" placeholder="A nombre de quien esta la cuenta">
+        </label>
+
+        <label class="campo">
+          <span>Banco</span>
+          <select name="cuenta_banco" required>
+            <option value="">Selecciona un banco</option>
+            <option value="BBVA">BBVA</option>
+            <option value="Nu">Nu</option>
+            <option value="Banregio">Banregio</option>
+            <option value="Banorte">Banorte</option>
+          </select>
+        </label>
+      </div>
+
+      <button type="submit" class="boton boton-primario">Crear mi cuenta</button>
+    </form>
+
+    <!-- ============ LOGIN ============ -->
+    <form id="form-login" class="panel oculto">
+      <label class="campo">
+        <span>Correo</span>
+        <input type="email" name="correo" placeholder="tucorreo@ejemplo.com" required>
+      </label>
+
+      <label class="campo">
+        <span>Contrasena</span>
+        <input type="password" name="password" placeholder="Tu contrasena" required>
+      </label>
+
+      <button type="submit" class="boton boton-primario">Entrar</button>
+    </form>
+  </div>
+
+  <script src="/static/js/comun.js"></script>
+  <script src="/static/js/login.js"></script>
+</body>
+</html>

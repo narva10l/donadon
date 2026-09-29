@@ -1,0 +1,23 @@
+# .env -> contiene las contrasenas de MySQL, nunca se sube a un repositorio
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Salida de pruebas guardada a mano
+reporte.txt
+reporte.xml
+reporte.html
+
+# JavaScript (Jest). El node_modules vive en un volumen de Docker,
+# pero por si se llega a instalar en la maquina, tampoco se sube.
+node_modules/
+package-lock.json
+
+# Herramientas
+.vscode/
+.idea/

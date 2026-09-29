@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donando - Caridades</title>
+  <link rel="stylesheet" href="/static/css/estilos.css">
+</head>
+<body>
+
+  <!-- ============ BARRA SUPERIOR ============ -->
+  <header class="barra">
+    <h1 class="marca">Donando</h1>
+    <div class="barra-derecha">
+      <span class="usuario">
+        <strong id="mi-nombre">...</strong>
+        <span id="mi-rol" class="etiqueta-rol">...</span>
+      </span>
+      <button id="btn-salir" type="button" class="boton boton-chico boton-claro">Salir</button>
+    </div>
+  </header>
+
+  <main class="contenido">
+    <h2 class="titulo-seccion">Caridades registradas</h2>
+    <p class="subtitulo-seccion">Toca una caridad para ver toda su informacion.</p>
+
+    <div id="mensaje" class="mensaje oculto"></div>
+
+    <div id="cargando" class="cargando">Cargando caridades...</div>
+    <div id="rejilla" class="rejilla"></div>
+  </main>
+
+  <!-- ============ MODAL DE DETALLE ============ -->
+  <div id="modal" class="modal oculto" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+    <div class="modal-fondo" data-cerrar></div>
+    <div class="modal-caja">
+      <button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button>
+
+      <h3 id="modal-titulo" class="modal-titulo"></h3>
+      <p id="modal-subtitulo" class="modal-subtitulo"></p>
+
+      <div class="modal-cuerpo">
+        <div class="dato">
+          <span class="dato-etiqueta">Causa</span>
+          <span id="dato-causa" class="dato-valor"></span>
+        </div>
+        <div class="dato">
+          <span class="dato-etiqueta">Ubicacion</span>
+          <span id="dato-ubicacion" class="dato-valor"></span>
+        </div>
+        <div class="dato">
+          <span class="dato-etiqueta">Informacion extra</span>
+          <span id="dato-info" class="dato-valor"></span>
+        </div>
+      </div>
+
+      <div class="modal-cuenta">
+        <h4>Datos de cuenta</h4>
+        <p class="nota">Las donaciones se hacen por fuera de la pagina, directamente al banco.</p>
+        <div class="dato">
+          <span class="dato-etiqueta">Banco</span>
+          <span id="dato-banco" class="dato-valor dato-negrita"></span>
+        </div>
+        <div class="dato">
+          <span class="dato-etiqueta">Numero de cuenta</span>
+          <span id="dato-cuenta" class="dato-valor dato-negrita"></span>
+        </div>
+        <div class="dato">
+          <span class="dato-etiqueta">Titular</span>
+          <span id="dato-titular" class="dato-valor dato-negrita"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/comun.js"></script>
+  <script src="/static/js/caridades.js"></script>
+</body>
+</html>

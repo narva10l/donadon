@@ -1,0 +1,29 @@
+# Lo que NO debe entrar en la imagen.
+# El .env lleva las contrasenas: solo se usa desde el host.
+
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+.git/
+.gitignore
+README.md
+
+# Script de Windows para correr las pruebas: solo sirve en el host.
+probar.bat
+probar-js.bat
+
+# --- Pruebas de JavaScript -------------------------------------
+# La app no usa Node. Esto solo corre en la imagen de pruebas
+# (Dockerfile.jest), que lo monta como volumen desde el host.
+tests-js/
+node_modules/
+package.json
+package-lock.json
+jest.config.js
+Dockerfile.jest
+Dockerfile.jest.dockerignore
+

@@ -1,0 +1,16 @@
+# Versiones fijadas a las que se probaron en este proyecto.
+# Si actualizas alguna, prueba la app antes de subirlas.
+
+fastapi==0.141.1
+uvicorn[standard]==0.54.0
+SQLAlchemy==2.1.1
+PyMySQL==1.2.3
+PyJWT==2.15.1
+bcrypt==5.0.0
+python-dotenv==1.2.3
+pydantic[email]==2.13.5
+Jinja2==3.1.6
+
+# Imprescindible: MySQL 8 usa caching_sha2_password y PyMySQL
+# no puede autenticarse sin esta libreria.
+cryptography==50.0.1

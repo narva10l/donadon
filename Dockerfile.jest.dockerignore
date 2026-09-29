@@ -1,0 +1,10 @@
+# Este archivo sustituye al .dockerignore de la raiz, pero SOLO
+# para la imagen de pruebas de JavaScript (Dockerfile.jest).
+#
+# El .dockerignore de la raiz esconde package.json y tests-js/ para que
+# no entren en la imagen de la app. Aqui si los necesitamos, asi que
+# no se esconde nada: el Dockerfile.jest solo copia package.json y
+# jest.config.js, y el codigo que se prueba (static/, templates/,
+# tests-js/) llega montado como volumen desde docker-compose.yml.
+#
+# Vacio a proposito.

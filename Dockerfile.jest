@@ -1,0 +1,29 @@
+# ============================================================
+#  Imagen SOLO para correr las pruebas de JavaScript con Jest.
+#  No se usa para servir la app: esa es la otra imagen (Dockerfile).
+# ============================================================
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Cache de npm en un lugar del sistema, para no repetir descargas.
+ENV NPM_CONFIG_CACHE=/npm-cache
+
+# Las dependencias se instalan al CONSTRUIR la imagen, no al correr.
+# Asi el arranque es instantaneo, y ademas "docker compose run
+# tests-js -t modal" funciona: Jest es el ENTRYPOINT, asi que lo que
+# se escriba despues se le pasa a el y no lo reemplaza.
+#
+# Si cambias el package.json, hay que reconstruir (probar-js
+# --reconstruir).
+COPY package.json ./
+RUN npm install --no-audit --no-fund --loglevel=error
+
+# Jest lo lee al arrancar. El docker-compose.yml lo monta desde el
+# host, asi que esto es solo por si se corre la imagen sola.
+COPY jest.config.js ./
+
+# El codigo que se prueba (static/, templates/ y tests-js/) NO se
+# copia: se monta desde Windows en docker-compose.yml, asi que editar
+# un .js no obliga a reconstruir nada.
+ENTRYPOINT ["./node_modules/.bin/jest"]
